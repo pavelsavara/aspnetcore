@@ -33,6 +33,7 @@ namespace Microsoft.AspNetCore.Mvc
             Type = type ?? throw new ArgumentNullException(nameof(type));
             StatusCode = statusCode;
             IsResponseTypeSetByDefault = false;
+            ContentTypes = new();
         }
 
         /// <summary>
@@ -44,6 +45,11 @@ namespace Microsoft.AspNetCore.Mvc
         /// Gets or sets the HTTP status code of the response.
         /// </summary>
         public int StatusCode { get; set; }
+
+        /// <summary>
+        /// Gets or sets the content types supported by the response.
+        /// </summary>
+        public MediaTypeCollection ContentTypes { get; set; }
 
         /// <summary>
         /// Used to distinguish a `Type` set by default in the constructor versus
@@ -58,9 +64,9 @@ namespace Microsoft.AspNetCore.Mvc
         internal bool IsResponseTypeSetByDefault { get; }
 
         /// <inheritdoc />
-        void IApiResponseMetadataProvider.SetContentTypes(MediaTypeCollection contentTypes)
+        public void SetContentTypes(MediaTypeCollection contentTypes)
         {
-            // Users are supposed to use the 'Produces' attribute to set the content types that an action can support.
+            ContentTypes = contentTypes;
         }
     }
 }

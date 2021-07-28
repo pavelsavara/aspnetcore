@@ -10,7 +10,9 @@
     <link href="css/app.css" rel="stylesheet" />
 </head>
 <body>
-    <app>Loading...</app>
+    <h1>Hello!</h1>
+
+    <my-counter increment-amount="100"></my-counter>
 
     <div id="blazor-error-ui">
         An unhandled exception has occurred. See browser dev tools for details.
@@ -18,13 +20,7 @@
         <a class="dismiss">🗙</a>
     </div>
 
-    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
-    <script>
-        (function(){
-            Blazor.start().then(function () {
-                window['__aspnetcore__testing__blazor_wasm__started__'] = true;
-            });
-        })();
-    </script>
+    <script src="BlazorCustomElements.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 </html>

@@ -1,10 +1,11 @@
 import { BootConfigResult } from './BootConfig';
 import { System_String, System_Object } from './Platform';
 import { Blazor } from '../GlobalExports';
+import { BINDING } from './Mono/MonoPlatform';
 
 export class WebAssemblyConfigLoader {
   static async initAsync(bootConfigResult: BootConfigResult): Promise<void> {
-    Blazor._internal.getApplicationEnvironment = () => BINDING.js_string_to_mono_string(bootConfigResult.applicationEnvironment);
+    Blazor._internal.getApplicationEnvironment = () => BINDING.js_string_to_mono_string(bootConfigResult.applicationEnvironment)!;
 
     const configFiles = await Promise.all((bootConfigResult.bootConfig.config || [])
       .filter(name => name === 'appsettings.json' || name === `appsettings.${bootConfigResult.applicationEnvironment}.json`)

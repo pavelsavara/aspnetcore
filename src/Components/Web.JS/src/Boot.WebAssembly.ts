@@ -2,7 +2,7 @@
 import { DotNet } from '@microsoft/dotnet-js-interop';
 import { Blazor } from './GlobalExports';
 import * as Environment from './Environment';
-import { byteArrayBeingTransferred, monoPlatform } from './Platform/Mono/MonoPlatform';
+import { byteArrayBeingTransferred, Module, BINDING, monoPlatform } from './Platform/Mono/MonoPlatform';
 import { renderBatch, getRendererer, attachRootComponentToElement, attachRootComponentToLogicalElement } from './Rendering/Renderer';
 import { SharedMemoryRenderBatch } from './Rendering/RenderBatch/SharedMemoryRenderBatch';
 import { shouldAutoStart } from './BootCommon';
@@ -16,7 +16,6 @@ import { discoverComponents, discoverPersistedState, WebAssemblyComponentDescrip
 import { setDispatchEventMiddleware } from './Rendering/WebRendererInteropMethods';
 import { fetchAndInvokeInitializers } from './JSInitializers/JSInitializers.WebAssembly';
 
-declare let Module: EmscriptenModule;
 let started = false;
 
 async function boot(options?: Partial<WebAssemblyStartOptions>): Promise<void> {
@@ -100,13 +99,13 @@ async function boot(options?: Partial<WebAssemblyStartOptions>): Promise<void> {
   Blazor._internal.registeredComponents = {
     getRegisteredComponentsCount: () => componentAttacher.getCount(),
     getId: (index) => componentAttacher.getId(index),
-    getAssembly: (id) => BINDING.js_string_to_mono_string(componentAttacher.getAssembly(id)),
-    getTypeName: (id) => BINDING.js_string_to_mono_string(componentAttacher.getTypeName(id)),
-    getParameterDefinitions: (id) => BINDING.js_string_to_mono_string(componentAttacher.getParameterDefinitions(id) || ''),
+    getAssembly: (id) => BINDING.js_string_to_mono_string(componentAttacher.getAssembly(id))!,
+    getTypeName: (id) => BINDING.js_string_to_mono_string(componentAttacher.getTypeName(id))!,
+    getParameterDefinitions: (id) => BINDING.js_string_to_mono_string(componentAttacher.getParameterDefinitions(id) || '')!,
     getParameterValues: (id) => BINDING.js_string_to_mono_string(componentAttacher.getParameterValues(id) || ''),
   };
 
-  Blazor._internal.getPersistedState = () => BINDING.js_string_to_mono_string(discoverPersistedState(document) || '');
+  Blazor._internal.getPersistedState = () => BINDING.js_string_to_mono_string(discoverPersistedState(document) || '')!;
 
   Blazor._internal.attachRootComponentToElement = (selector, componentId, rendererId) => {
     const element = componentAttacher.resolveRegisteredElement(selector);

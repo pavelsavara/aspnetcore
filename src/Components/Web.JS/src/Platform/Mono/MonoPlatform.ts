@@ -302,7 +302,7 @@ function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoade
 
   module.preRun.push(() => {
     // By now, emscripten should be initialised enough that we can capture these methods for later use
-    mono_wasm_add_assembly = cwrap('mono_wasm_add_assembly', null, [
+    mono_wasm_add_assembly = (<any>Module).cwrap('mono_wasm_add_assembly', null, [
       'string',
       'number',
       'number',
@@ -458,7 +458,7 @@ function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoade
       MONO.mono_wasm_setenv('__ASPNETCORE_BROWSER_TOOLS', resourceLoader.bootConfig.aspnetCoreBrowserTools);
     }
 
-    const load_runtime = cwrap('mono_wasm_load_runtime', null, ['string', 'number']);
+    const load_runtime = (<any>Module).cwrap('mono_wasm_load_runtime', null, ['string', 'number']);
     // -1 enables debugging with logging disabled. 0 disables debugging entirely.
     load_runtime(appBinDirName, hasDebuggingEnabled() ? -1 : 0);
     MONO.mono_wasm_runtime_ready();
@@ -470,7 +470,7 @@ function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoade
 
   async function addResourceAsAssembly(dependency: LoadingResource, loadAsName: string) {
     const runDependencyId = `blazor:${dependency.name}`;
-    addRunDependency(runDependencyId);
+    (<any>Module).addRunDependency(runDependencyId);
 
     try {
       // Wait for the data to be loaded and verified
@@ -488,7 +488,7 @@ function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoade
       return;
     }
 
-    removeRunDependency(runDependencyId);
+    (<any>Module).removeRunDependency(runDependencyId);
   }
 }
 
@@ -555,7 +555,7 @@ function attachInteropInvoker(): void {
 
 async function loadTimezone(timeZoneResource: LoadingResource): Promise<void> {
   const runDependencyId = 'blazor:timezonedata';
-  addRunDependency(runDependencyId);
+  (<any>Module).addRunDependency(runDependencyId);
 
   const request = await timeZoneResource.response;
   const arrayBuffer = await request.arrayBuffer();
@@ -565,7 +565,7 @@ async function loadTimezone(timeZoneResource: LoadingResource): Promise<void> {
   Module['FS_createPath']('/usr/share/', 'zoneinfo', true, true);
   MONO.mono_wasm_load_data_archive(new Uint8Array(arrayBuffer), '/usr/share/zoneinfo/');
 
-  removeRunDependency(runDependencyId);
+  (<any>Module).removeRunDependency(runDependencyId);
 }
 
 function getICUResourceName(bootConfig: BootJsonData, culture: string | undefined): string {
@@ -596,7 +596,7 @@ function getICUResourceName(bootConfig: BootJsonData, culture: string | undefine
 
 async function loadICUData(icuDataResource: LoadingResource): Promise<void> {
   const runDependencyId = 'blazor:icudata';
-  addRunDependency(runDependencyId);
+  (<any>Module).addRunDependency(runDependencyId);
 
   const request = await icuDataResource.response;
   const array = new Uint8Array(await request.arrayBuffer());
@@ -605,7 +605,7 @@ async function loadICUData(icuDataResource: LoadingResource): Promise<void> {
   if (!MONO.mono_wasm_load_icu_data(offset)) {
     throw new Error('Error loading ICU asset.');
   }
-  removeRunDependency(runDependencyId);
+  (<any>Module).removeRunDependency(runDependencyId);
 }
 
 async function compileWasmModule(wasmResource: LoadingResource, imports: any): Promise<WebAssembly.Instance> {

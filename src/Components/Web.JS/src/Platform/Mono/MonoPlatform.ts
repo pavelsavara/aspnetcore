@@ -160,7 +160,7 @@ export const monoPlatform: Platform = {
   },
 };
 
-async function addScriptTagsToDocument(resourceLoader: WebAssemblyResourceLoader): Promise<CreateDotnetRuntimeType> {
+function importDotnetJs(resourceLoader: WebAssemblyResourceLoader): Promise<{ default: CreateDotnetRuntimeType }> {
   const browserSupportsNativeWebAssembly = typeof WebAssembly !== 'undefined' && WebAssembly.validate;
   if (!browserSupportsNativeWebAssembly) {
     throw new Error('This browser does not support WebAssembly.');
@@ -174,47 +174,28 @@ async function addScriptTagsToDocument(resourceLoader: WebAssemblyResourceLoader
     .keys(resourceLoader.bootConfig.resources.runtime)
     .filter(n => n.startsWith('dotnet.') && n.endsWith('.js'))[0];
   const dotnetJsContentHash = resourceLoader.bootConfig.resources.runtime[dotnetJsResourceName];
-  const scriptElem = document.createElement('script');
-  scriptElem.src = `_framework/${dotnetJsResourceName}`;
-  scriptElem.defer = true;
+  let src = `./${dotnetJsResourceName}`;
 
-  // For consistency with WebAssemblyResourceLoader, we only enforce SRI if caching is allowed
-  if (resourceLoader.bootConfig.cacheBootResources) {
-    scriptElem.integrity = dotnetJsContentHash;
-    scriptElem.crossOrigin = 'anonymous';
-  }
+  // TODO SRI  dotnetJsContentHash;
 
   // Allow overriding the URI from which the dotnet.*.js file is loaded
   if (resourceLoader.startOptions.loadBootResource) {
     const resourceType: WebAssemblyBootResourceType = 'dotnetjs';
-    const customSrc = resourceLoader.startOptions.loadBootResource(resourceType, dotnetJsResourceName, scriptElem.src, dotnetJsContentHash);
+    const customSrc = resourceLoader.startOptions.loadBootResource(resourceType, dotnetJsResourceName, src, dotnetJsContentHash);
     if (typeof (customSrc) === 'string') {
-      scriptElem.src = customSrc;
+      src = customSrc;
     } else if (customSrc) {
       // Since we must load this via a <script> tag, it's only valid to supply a URI (and not a Request, say)
       throw new Error(`For a ${resourceType} resource, custom loaders must supply a URI string.`);
     }
   }
 
-  document.body.appendChild(scriptElem);
-
-  // bysy spin waiting for script to load into global namespace
-  // this will be replaced with dynamic import when we switch to ES6
-  let timeout = 100;
-  while (timeout > 0) {
-    if ((<any>globalThis).createDotnetRuntime) {
-      return (<any>globalThis).createDotnetRuntime;
-    }
-    // delay 10ms
-    await new Promise(resolve => setTimeout(resolve, 10));
-    timeout--;
-  }
-  throw new Error(`Can't load ${dotnetJsResourceName}`);
+  return import(/* webpackIgnore: true */ src);
 }
 
 async function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoader, onReady: () => void, onError: (reason?: any) => void) {
-  const createDotnetRuntime = await addScriptTagsToDocument(resourceLoader);
 
+  const dotnetJsBeingLoaded = importDotnetJs(resourceLoader);
   const resources = resourceLoader.bootConfig.resources;
   const moduleConfig = (window['Module'] || {}) as typeof Module;
   const suppressMessages = ['DEBUGGING ENABLED'];
@@ -265,6 +246,8 @@ async function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourc
       'globalization'
     );
   }
+
+  const { default: createDotnetRuntime } = await dotnetJsBeingLoaded;
 
   return await createDotnetRuntime(({ MONO: mono, BINDING: binding, Module: module }) => {
     Module = module;

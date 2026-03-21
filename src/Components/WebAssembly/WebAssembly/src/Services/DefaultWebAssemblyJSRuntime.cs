@@ -7,6 +7,7 @@ using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.Web.Internal;
+using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.WebAssembly.Infrastructure;
 using Microsoft.JSInterop;
@@ -31,6 +32,8 @@ internal sealed partial class DefaultWebAssemblyJSRuntime : WebAssemblyJSRuntime
     [DynamicDependency(nameof(BeginInvokeDotNet))]
     [DynamicDependency(nameof(ReceiveByteArrayFromJS))]
     [DynamicDependency(nameof(UpdateRootComponentsCore))]
+    [DynamicDependency(nameof(OnSpacerBeforeVisible))]
+    [DynamicDependency(nameof(OnSpacerAfterVisible))]
     [DynamicDependency(JsonSerialized, typeof(KeyValuePair<,>))]
     private DefaultWebAssemblyJSRuntime()
     {
@@ -91,6 +94,26 @@ internal sealed partial class DefaultWebAssemblyJSRuntime : WebAssemblyJSRuntime
             // exceptions into a failure on the JS Promise object.
             DotNetDispatcher.BeginInvokeDotNet(Instance, state.callInfo, state.argsJson);
         });
+    }
+
+    [JSExport]
+    [SupportedOSPlatform("browser")]
+    public static void OnSpacerBeforeVisible([JSMarshalAs<JSType.Number>] long dotNetObjectId, float spacerSize, float spacerSeparation, float containerSize)
+    {
+        if (Instance.GetTrackedObjectById(dotNetObjectId) is IVirtualizeJsExportCallbacks interop)
+        {
+            interop.OnSpacerBeforeVisible(spacerSize, spacerSeparation, containerSize);
+        }
+    }
+
+    [JSExport]
+    [SupportedOSPlatform("browser")]
+    public static void OnSpacerAfterVisible([JSMarshalAs<JSType.Number>] long dotNetObjectId, float spacerSize, float spacerSeparation, float containerSize)
+    {
+        if (Instance.GetTrackedObjectById(dotNetObjectId) is IVirtualizeJsExportCallbacks interop)
+        {
+            interop.OnSpacerAfterVisible(spacerSize, spacerSeparation, containerSize);
+        }
     }
 
     [SupportedOSPlatform("browser")]

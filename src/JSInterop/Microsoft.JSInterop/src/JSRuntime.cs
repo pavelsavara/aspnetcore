@@ -370,6 +370,18 @@ public abstract partial class JSRuntime : IJSRuntime, IDisposable
     }
 
     /// <summary>
+    /// Gets the tracked object associated with the specified <paramref name="dotNetObjectId"/>.
+    /// </summary>
+    /// <param name="dotNetObjectId">The identifier for the tracked object.</param>
+    /// <returns>The tracked object, or <see langword="null"/> if no object with the specified ID is being tracked.</returns>
+    protected internal object? GetTrackedObjectById(long dotNetObjectId)
+    {
+        return _trackedRefsById.TryGetValue(dotNetObjectId, out var dotNetObjectRef)
+            ? dotNetObjectRef.Value
+            : null;
+    }
+
+    /// <summary>
     /// Stops tracking the specified .NET object reference.
     /// This may be invoked either by disposing a DotNetObjectRef in .NET code, or via JS interop by calling "dispose" on the corresponding instance in JavaScript code
     /// </summary>

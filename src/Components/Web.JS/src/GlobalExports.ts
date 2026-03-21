@@ -93,6 +93,8 @@ export interface IBlazor {
       BeginInvokeDotNet: (callId: string | null, assemblyNameOrDotNetObjectId: string, methodIdentifier: string, argsJson: string) => void;
       ReceiveByteArrayFromJS: (id: number, data: Uint8Array) => void;
       UpdateRootComponentsCore: (operationsJson: string, appState: string) => void;
+      OnSpacerBeforeVisible: (dotNetObjectId: number, spacerSize: number, spacerSeparation: number, containerSize: number) => void;
+      OnSpacerAfterVisible: (dotNetObjectId: number, spacerSize: number, spacerSeparation: number, containerSize: number) => void;
     }
 
     // APIs invoked by hot reload

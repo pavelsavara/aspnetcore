@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 import { DotNet } from '@microsoft/dotnet-js-interop';
+import { Blazor } from './GlobalExports';
 
 export const Virtualize = {
   init,
@@ -34,6 +35,8 @@ function init(dotNetHelper: DotNet.DotNetObject, spacerBefore: HTMLElement, spac
   if (!spacerBefore || !spacerAfter || !spacerBefore.isConnected || !spacerAfter.isConnected) {
     return;
   }
+
+  const dotNetHelperId: number = dotNetHelper['_id'];
 
   // Overflow anchoring can cause an ongoing scroll loop, because when we resize the spacers, the browser
   // would update the scroll position to compensate. Then the spacer would remain visible and we'd keep on
@@ -114,12 +117,20 @@ function init(dotNetHelper: DotNet.DotNetObject, spacerBefore: HTMLElement, spac
       const containerSize = entry.rootBounds?.height;
 
       if (entry.target === spacerBefore) {
-        dotNetHelper.invokeMethodAsync('OnSpacerBeforeVisible', entry.intersectionRect.top - entry.boundingClientRect.top, spacerSeparation, containerSize);
+        if (Blazor._internal.dotNetExports) {
+          Blazor._internal.dotNetExports.OnSpacerBeforeVisible(dotNetHelperId, entry.intersectionRect.top - entry.boundingClientRect.top, spacerSeparation, containerSize ?? 0);
+        } else {
+          dotNetHelper.invokeMethodAsync('OnSpacerBeforeVisible', entry.intersectionRect.top - entry.boundingClientRect.top, spacerSeparation, containerSize);
+        }
       } else if (entry.target === spacerAfter && spacerAfter.offsetHeight > 0) {
         // When we first start up, both the "before" and "after" spacers will be visible, but it's only relevant to raise a
         // single event to load the initial data. To avoid raising two events, skip the one for the "after" spacer if we know
         // it's meaningless to talk about any overlap into it.
-        dotNetHelper.invokeMethodAsync('OnSpacerAfterVisible', entry.boundingClientRect.bottom - entry.intersectionRect.bottom, spacerSeparation, containerSize);
+        if (Blazor._internal.dotNetExports) {
+          Blazor._internal.dotNetExports.OnSpacerAfterVisible(dotNetHelperId, entry.boundingClientRect.bottom - entry.intersectionRect.bottom, spacerSeparation, containerSize ?? 0);
+        } else {
+          dotNetHelper.invokeMethodAsync('OnSpacerAfterVisible', entry.boundingClientRect.bottom - entry.intersectionRect.bottom, spacerSeparation, containerSize);
+        }
       }
     });
   }
